@@ -1,0 +1,719 @@
+identifier: 
+    basic_identifier 
+    //| extended_identifier
+
+basic_identifier: LETTER+ ( UNDERLINE | LETTER_OR_DIGIT )*
+
+identifier_list: identifier ( "," identifier )*
+ 
+ // TODO
+character_literal: ["'" | "\""] LETTER_OR_DIGIT ["'" | "\""] 
+
+//extended_identifier:
+//    "\\" GRAPHIC_CHARACTER+  "\\"
+
+LETTER_OR_DIGIT: LETTER | DIGIT
+
+UNDERLINE: "_"
+
+//// Unit /////////////////////////////////////////////////////////////////////
+
+design_file:
+    design_unit+
+
+design_unit: context_clause library_unit
+
+context_clause: context_item*
+
+context_item:
+    library_clause
+    //| use_clause
+    //| context_reference
+
+library_unit:
+    primary_unit
+    | secondary_unit
+
+primary_unit:
+    entity_declaration
+    //| configuration_declaration
+    //| package_declaration
+    //| package_instantiation_declaration | context_declaration
+    //| PSL_Verification_Unit
+
+secondary_unit:
+    architecture_body
+    //| package_body
+
+//// Entity ////////////////////////////////////////////////////////////////////
+
+entity_declaration:
+    "entity"i identifier "is"i
+        entity_header
+        entity_declarative_part 
+    [ "begin" 
+        entity_statement_part ]
+    "end"i [ entity ] [ entity_simple_name ] ";"
+
+entity_header:
+    [ formal_generic_clause ]
+    [ formal_port_clause ]
+
+formal_generic_clause: generic_clause
+formal_port_clause: port_clause
+
+entity_declarative_part: entity_declarative_item*
+
+entity_declarative_item:
+    //subprogram_declaration
+    //| subprogram_body
+    //| subprogram_instantiation_declaration
+    //| package_declaration
+    //| package_body
+    //| package_instantiation_declaration
+    | type_declaration
+    //| subtype_declaration
+    //| constant_declaration
+    //| signal_declaration
+    //| shared_variable_declaration
+    //| file_declaration
+    //| alias_declaration
+    //| attribute_declaration
+    //| attribute_specification
+    //| disconnection_specification
+    //| use_clause
+    //| group_template_declaration
+    //| group_declaration
+    //| PSL_Property_Declaration
+    //| PSL_Sequence_Declaration
+    //| PSL_Clock_Declaration
+
+entity_statement_part: entity_statement*
+
+entity_statement:
+    //concurrent_assertion_statement
+    //| passive_concurrent_procedure_call_statement
+    //| passive_process_statement
+
+entity_simple_name: simple_name
+
+//// Architecture Body ////////////////////////////////////////////////////////
+
+architecture_body ::=
+    "architecture"i identifier "of"i entity_name "is"i
+    architecture_declarative_part
+    "begin"i
+    architecture_statement_part
+    "end"i [ architecture ] [ architecture_simple_name ] ;
+
+architecture_declarative_part: block_declarative_item*
+
+block_declarative_item:
+    //subprogram_declaration
+    //| subprogram_body
+    //| subprogram_instantiation_declaration
+    //| package_declaration
+    //| package_body
+    //| package_instantiation_declaration
+    | type_declaration
+    //| subtype_declaration
+    | constant_declaration
+    | signal_declaration
+    //| shared_variable_declaration
+    //| file_declaration
+    //| alias_declaration
+    | component_declaration
+    //| attribute_declaration
+    //| attribute_specification
+    //| configuration_specification
+    //| disconnection_specification
+    //| use_clause
+    //| group_template_declaration
+    //| group_declaration
+    //| PSL_Property_Declaration
+    //| PSL_Sequence_Declaration
+    //| PSL_Clock_Declaration
+
+architecture_statement_part: concurrent_statement*
+
+//// Types ////////////////////////////////////////////////////////////////////
+
+scalar_type_definition:
+    enumeration_type_definition
+    | integer_type_definition
+    //| floating_type_definition
+    //| physical_type_definition
+
+range_constraint: "range"i range
+
+range:
+    //range_attribute_name
+    | simple_expression direction simple_expression
+
+range_attribute_name: name
+
+direction: "to"i | "downto"i
+
+enumeration_type_definition: 
+    "(" enumeration_literal ("," enumeration_literal )* ")"
+
+enumeration_literal: identifier | character_literal
+
+integer_type_definition: range_constraint
+
+composite_type_definition:
+    array_type_definition
+    | record_type_definition
+
+array_type_definition:
+    unbounded_array_definition | constrained_array_definition
+
+unbounded_array_definition:
+    "array"i "(" index_subtype_definition ( "," index_subtype_definition)* ")"
+        "of"i element_subtype_indication
+
+constrained_array_definition:
+    "array"i index_constraint "of"i element_subtype_indication
+
+index_subtype_definition: type_mark range "<>"
+
+element_subtype_indication: subtype_indication
+
+array_constraint:
+    index_constraint [ array_element_constraint ]
+    | "(" open ")" [ array_element_constraint ]
+
+array_element_constraint: element_constraint
+
+index_constraint: "(" discrete_range ( ","" discrete_range )* ")"
+
+discrete_range : discrete_subtype_indication | range
+
+discrete_subtype_indication: subtype_indication
+
+record_type_definition:
+    "record"
+        element_declaration
+        ( element_declaration )+
+    "end"i "record"i [ record_type_simple_name ]
+
+element_declaration:
+    identifier_list ":" element_subtype_definition ";"
+
+element_subtype_definition: subtype_indication
+
+record_constraint:
+    "(" record_element_constraint ( "," record_element_constraint )* ")"
+
+record_element_constraint : record_element_simple_name element_constraint
+
+record_type_simple_name: simple_name
+
+incomplete_type_declaration : "type"i identifier ";"
+
+type_declaration:
+    full_type_declaration
+    | incomplete_type_declaration
+
+full_type_declaration:
+    "type"i identifier "is"i type_definition ";"
+
+subtype_declaration:
+    subtype identifier "is"i subtype_indication ";"
+
+subtype_indication:
+    [ resolution_indication ] type_mark [ constraint ]
+
+resolution_function_name : name
+
+resolution_indication: 
+    resolution_function_name
+    | "(" element_resolution ")"
+
+element_resolution:
+     array_element_resolution 
+     | record_resolution
+
+array_element_resolution: resolution_indication
+
+record_resolution: record_element_resolution ( "," record_element_resolution )*
+
+record_element_resolution: record_element_simple_name resolution_indication
+
+record_element_simple_name: simple_name
+
+
+type_definition:
+    scalar_type_definition
+    | composite_type_definition
+    //| access_type_definition
+    //| file_type_definition
+    //| protected_type_definition
+
+type_mark:
+    type_name
+    | subtype_name
+
+type_name: name
+
+subtype_name: name
+
+constraint:
+    range_constraint
+    | array_constraint
+    | record_constraint
+
+element_constraint:
+    array_constraint
+    | record_constraint
+
+//// Objects //////////////////////////////////////////////////////////////////
+
+object_declaration:
+    constant_declaration
+    | signal_declaration
+    | variable_declaration
+    //| file_declaration
+
+constant_declaration:
+    "constant"i identifier_list ":" subtype_indication [ ":=" expression ] ";"
+
+signal_declaration:
+    signal identifier_list ":" subtype_indication [ signal_kind ] [ ":=" expression ] ";"
+
+signal_kind: "register"i | "bus"i
+
+variable_declaration:
+    [ "shared" ] "variable" identifier_list : subtype_indication [ ":=" expression ] ";"
+
+
+//// Intefaces /////////////////////////////////////////////////////////////////
+
+interface_declaration:
+    interface_object_declaration
+    | interface_type_declaration
+    | interface_subprogram_declaration
+    | interface_package_declaration
+
+interface_object_declaration:
+    interface_constant_declaration
+    | interface_signal_declaration
+    | interface_variable_declaration
+    | interface_file_declaration
+
+interface_constant_declaration:
+    [ "constant" ] identifier_list ":" [ "in" ] subtype_indication [ ":=" static_expression ]
+
+interface_signal_declaration:
+    [ "signal" ] identifier_list : [ mode ] subtype_indication [ "bus" ] [ := static_expression ]
+
+mode: "in" | "out" | "inout" | "buffer" | "linkage"
+
+interface_subprogram_declaration:
+    interface_subprogram_specification [ "is" interface_subprogram_default ]
+
+interface_subprogram_specification:
+    interface_procedure_specification | interface_function_specification
+
+interface_procedure_specification:
+    "procedure"i designator
+        [ [ "parameter"i ] ( formal_parameter_list ) ]
+
+interface_function_specification:
+    [ "pure"i | "impure"i ] function designator
+        [ [ "parameter"i ] ( formal_parameter_list ) ] "return"i type_mark
+
+interface_subprogram_default: subprogram_name | "<>"
+
+subprogram_name: name
+
+interface_package_declaration:
+    "package"i identifier "is"i "new"i uninstantiated_package_name interface_package_generic_map_aspect
+
+uninstantiated_package_name: name
+
+interface_package_generic_map_aspect:
+    generic_map_aspect
+    | "generic"i "map"i "(" "<>" ")"
+    | "generic"i "map"i "(" "default" ")"
+
+interface_list:
+    interface_element ( ";" interface_element )*
+
+generic_clause:
+    "generic"i "(" generic_list ")" ";"
+
+generic_list: generic_interface_list
+
+generic_interface_list: interface_list
+
+port_clause:
+    "port" "(" port_list ")" ";"
+
+port_list: port_interface_list
+
+port_interface_list: interface_ist
+
+// Association lists
+
+association_list:
+    association_element "{" "," association_element "}"
+
+association_element:
+    [ formal_part "=>" ] actual_part
+
+formal_part:
+    formal_designator
+    | function_name "(" formal_designator ")"
+    | type_mark "(" formal_designator ")"
+
+function_name: name
+
+formal_designator:
+    generic_name
+    | port_name
+    | parameter_name
+
+generic_name: name
+port_name: name
+parameter_name: name
+
+actual_part:
+    actual_designator
+    | function_name "(" actual_designator ")"
+    | type_mark "(" actual_designator ")"
+
+actual_designator ::=
+    [ "inertial"i ] expression
+    | signal_name
+    | variable_name
+    | file_name
+    | subtype_indication
+    | subprogram_name
+    | instantiated_package_name
+    | "open"i
+
+signal_name: name
+variable_name: name
+file_name: name
+subtype_indication
+suprogram_name: name
+instantiated_package_name:  name
+
+generic_map_aspect:
+    "generic"i "map"i "(" generic_association_list ")"
+
+generic_association_list: association_list
+
+port_map_aspect:
+    "port"i "map"i ( port_association_list )
+
+port_association_list: association_list
+
+alias_declaration:
+    "alias"i alias_designator [ : subtype_indication ] "is" name [ signature ] ";"
+
+alias_designator: identifier | character_literal | operator_symbol
+
+//// Attributes  //////////////////////////////////////////////////////////////
+
+attribute_declaration:
+    "attribute"i identifier ":" type_mark ";"
+
+
+//// Components  //////////////////////////////////////////////////////////////
+
+component_declaration ::=
+    "component"i identifier [ "is" ]
+    [ local_generic_clause ]
+    [ local_port_clause ]
+"end"i "component"i [ component_simple_name ] ;
+
+local_generic_clause: generic_clause
+local_port_clause: port_clause
+component_simple_name: simple_name
+
+///////////////////////////////////////////////////////////////////////////////
+// Specifications
+///////////////////////////////////////////////////////////////////////////////
+
+attribute_specification:
+    "attribute"i attribute_designator "of"i entity_specification "is"i expression ";"
+
+entity_specification:
+    entity_name_list ":" entity_class
+
+
+entity_class:
+    "entity"i
+    | "architecture"i
+    | "configuration"i
+    | "procedure"i
+    | "function"i
+    | "package"i
+    | "type"i
+    | "subtype"i
+    | "constant"i
+    | "signal"i
+    | "variable"i
+    | "component"i
+    | "label"i
+    | "literal"i
+    | "units"i
+    | "group"i
+    | "file"i
+    | "property"i
+    | "sequence"i
+
+entity_name_list:
+    entity_designator ( "," entity_designator )*
+    | "others"i
+    | "all"i
+
+entity_designator: entity_tag [ signature ]
+
+entity_tag: simple_name | character_literal | operator_symbol
+
+///////////////////////////////////////////////////////////////////////////////
+// Names
+///////////////////////////////////////////////////////////////////////////////
+
+name:
+    simple_name
+    | operator_symbol
+    | character_literal
+    | selected_name
+    | indexed_name
+    | slice_name
+    | attribute_name
+    | external_name
+
+prefix:
+    name
+    | function_call
+
+simple_name: identifier
+
+selected_name: prefix "." suffix
+
+suffix:
+    simple_name
+    | character_literal
+    | operator_symbol
+    | "all"i
+
+slice_name: prefix ( discrete_range )
+
+attribute_name ::=
+    prefix [ signature ] "'" attribute_designator [ "(" expression ")" ]
+
+attribute_designator: attribute_simple_name
+
+attribute_simple_name: simple_name
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Expressions
+///////////////////////////////////////////////////////////////////////////////
+
+expression:
+    condition_operator primary
+    | logical_expression
+
+logical_expression ::=
+    relation ( "and"i relation )*
+    | relation ( "or"i relation )*
+    | relation ( "xor"i relation )*
+    | relation [ "nand"i relation ]
+    | relation [ "nor"i relation ]
+    | relation ( "xnor"i relation )*
+
+relation:
+    shift_expression [ relational_operator shift_expression ]
+
+shift_expression:
+    simple_expression [ shift_operator simple_expression ]
+
+simple_expression ::=
+    [ sign ] term ( adding_operator term )*
+
+term:
+    factor ( multiplying_operator factor )*
+
+factor ::=
+    primary [ "**" primary ]
+    | "abs"i primary
+    | "not"i primary
+    | "logical_operator"i primary
+
+primary:
+    name
+    | literal
+    | aggregate
+    | function_call
+    | qualified_expression
+    | type_conversion
+    | allocator
+    | "(" expression ")"
+
+///////////////////////////////////////////////////////////////////////////////
+// Operators
+///////////////////////////////////////////////////////////////////////////////    
+
+
+condition_operator: "??"
+
+logical_operator: "and" | "or" | "nand" | "nor" | "xor" | "xnor"
+
+relational_operator: | "/=" | "<" | "<=" | ">" | ">=" | "?=" | "?/=" | "?<" | "?<=" | "?>" | "?>="
+
+shift_operator: "sll"i | "srl"i | "sla"i | "sra"i | "rol"i | "ror"i
+
+adding_operator: "+" | "–" | "&"
+
+sign: "+" | "–"
+
+multiplying_operator: "*" | "/" | "mod"i | "rem"i
+
+miscellaneous_operator: "**" | "abs" | "not"
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Operands
+///////////////////////////////////////////////////////////////////////////////    
+
+literal:
+    numeric_literal
+    | enumeration_literal
+    | string_literal
+    | bit_string_literal
+    | null
+
+numeric_literal:
+    abstract_literal
+    //| physical_literal
+
+aggregate:
+    "(" element_association ( "," element_association )* ")"  
+
+element_association:
+    [ choices => ] expression
+
+choices: choice ( "|" choice )*
+
+choice:
+    simple_expression
+    | discrete_range
+    | element_simple_name
+    | "others"i
+
+element_simple_name: simple_name
+
+//// Function calls ///////////////////////////////////////////////////////////
+
+function_call:
+    function_name [ "(" actual_parameter_part ")" ]
+
+actual_parameter_part: parameter_association_list
+
+parameter_association_list: association_list
+
+//// Qualified expressions ////////////////////////////////////////////////////
+
+qualified_expression:
+    type_mark "'" "(" expression ")" | type_mark "'" aggregate
+
+//// Type conversions /////////////////////////////////////////////////////////
+
+type_conversion: type_mark "(" expression ")"
+
+//// Allocators ///////////////////////////////////////////////////////////////
+
+allocator:
+    "new"i subtype_indication
+    | "new"i qualified_expression
+
+///////////////////////////////////////////////////////////////////////////////
+// Sequential statements
+/////////////////////////////////////////////////////////////////////////////// 
+
+sequence_of_statements:
+    ( sequential_statement )*
+
+sequential_statement:
+    wait_statement
+    | assertion_statement
+    | report_statement
+    | signal_assignment_statement
+    | variable_assignment_statement
+    | procedure_call_statement
+    | if_statement
+    | case_statement
+    | loop_statement
+    | next_statement
+    | exit_statement
+    | return_statement
+    | null_statement
+
+//// Wait statement ///////////////////////////////////////////////////////////
+
+wait_statement ::=
+    [ label : ] "wait"i [ sensitivity_clause ] [ condition_clause ] [ timeout_clause ] ";"
+
+sensitivity_clause: "on"i sensitivity_list
+
+sensitivity_list: signal_name ( "," signal_name )*
+
+condition_clause: "until" condition
+
+condition: expression
+
+timeout_clause: "for" time_expression
+
+//// Assertion statement //////////////////////////////////////////////////////
+
+assertion_statement: [ label ":" ] assertion ";"
+
+assertion:
+    "assert"i condition
+    [ "report"i expression ]
+    [ "severity"i expression ]
+
+//// Report statement /////////////////////////////////////////////////////////
+
+report_statement ::=
+    [ label : ] 
+        "report"i expression
+            [ "severity" expression ] ;
+
+//// Signal assignment statement //////////////////////////////////////////////
+
+signal_assignment_statement ::=
+    [ label : ] simple_signal_assignment
+    | [ label : ] conditional_signal_assignment
+    | [ label : ] selected_signal_assignment
+
+simple_signal_assignment:
+    simple_waveform_assignment
+    | simple_force_assignment
+    | simple_release_assignment
+
+
+simple_waveform_assignment:
+    target "<=" [ delay_mechanism ] waveform ";"
+
+simple_force_assignment:
+    target <= force [ force_mode ] expression ;
+
+%import common.LETTER
+%import common.DIGIT
+%import common.INT -> NUMBER
+%import common.WS
+%ignore WS
+
+
+//entity_declaration :  entity IDENTIFIER "is" entity_header
+//entity_declarative_part [ begin
+//entity_statement_part ]
+//end [ entity ] [ entity_simple_name ] ;
+
