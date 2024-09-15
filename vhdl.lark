@@ -685,7 +685,7 @@ interface_package_generic_map_aspect: \
 interface_list: \
     interface_element ( ";" interface_element )*
 
-interface_element: interface_declaration    
+interface_element: interface_declaration
 
 generic_clause: \
     "generic"i "(" generic_list ")" ";"
@@ -743,7 +743,6 @@ actual_designator: \
 signal_name: name
 variable_name: name
 file_name: name
-//subtype_indication: indication
 suprogram_name: name
 instantiated_package_name:  name
 
@@ -1025,7 +1024,7 @@ logical_expression: \
     | nor_expression
     | relation ( "xnor"i relation )*
 
-nand_expression: relation ["nand"i relation]
+nand_expression: relation ["nand"i relation ]
 nor_expression:  relation [ "nor"i relation ]
 
 relation: \
@@ -1035,10 +1034,10 @@ shift_expression: \
     simple_expression [ shift_operator simple_expression ]
 
 simple_expression: \
-    [ sign ] term adding_operator term*
+    [ sign ] term (adding_operator term)*
 
 term: \
-    factor multiplying_operator factor*
+    factor (multiplying_operator factor)*
 
 factor: \
     primary [ "**" primary ]
@@ -1551,7 +1550,7 @@ label: identifier
 //// 12.4 Use clauses /////////////////////////////////////////////////////////
 
 use_clause: \ 
-    "use"i selected_name ( "," selected_name ) ";"
+    "use"i selected_name ( "," selected_name )* ";"
 
 ///////////////////////////////////////////////////////////////////////////////
 // 13 Design units and their analysis
